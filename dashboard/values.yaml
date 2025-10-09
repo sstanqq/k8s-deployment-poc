@@ -1,0 +1,20 @@
+app:
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - dashboard.local
+    path: /
+    tls:
+      enabled: false
+      # secretName: dashboard-tls
+
+kong:
+  enabled: true
+  proxy:
+    type: ClusterIP
+    http:
+      enabled: true
+    tls:
+      enabled: false
+      servicePort: 80
