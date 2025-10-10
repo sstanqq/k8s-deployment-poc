@@ -1,0 +1,11 @@
+namespace: glance-app
+
+resources:
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+
+configMapGenerator:
+  - name: glance-config
+    files:
+      - glance.yml=configs/glance.yaml
