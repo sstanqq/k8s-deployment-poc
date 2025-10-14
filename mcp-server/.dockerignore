@@ -1,0 +1,16 @@
+*.log
+logs/
+
+configs/.env
+configs/.env.local
+
+bin/
+*.exe
+*.out
+
+.git
+.gitignore
+
+.vscode/
+.idea/
+.DS_Store

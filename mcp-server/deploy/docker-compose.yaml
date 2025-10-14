@@ -1,0 +1,17 @@
+services:
+  mcp-server:
+    build: 
+      context: ..
+      dockerfile: build/Dockerfile
+    env_file:
+      - ../configs/.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - "../${LOG_FILE_PATH:-./logs}:/app/logs"
+
+  log-watcher:
+    image: busybox
+    command: sh -c "touch /app/logs/requests.log && tail -F /app/logs/requests.log"
+    volumes:
+      - "../${LOG_FILE_PATH:-./logs}:/app/logs"
