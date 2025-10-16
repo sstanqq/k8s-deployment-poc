@@ -1,0 +1,28 @@
+replicaCount: 1
+
+image:
+  repository: mcp-server
+  pullPolicy: IfNotPresent
+  tag: latest
+
+sidecar:
+  image: busybox
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: true
+  className: traefik
+  entrypoints:
+    - web
+  hosts:
+    - host: mcp-server.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: mcp-server-tls
+  #    hosts:
+  #      - mcp-server.local

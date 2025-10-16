@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mcp-server.fullname" . }}-config
+  labels:
+    app: {{ include "mcp-server.name" . }}
+data:
+  {{- $envFile := .Files.Get "files/.env" | fromYaml }}
+  HTTP_ADDR_HOST: {{ default "0.0.0.0" $envFile.HTTP_ADDR_HOST | quote }}
+  HTTP_ADDR_PORT: {{ default "8000" $envFile.HTTP_ADDR_PORT | quote }}
+  SERVER_NAME: {{ default "my-local-mcp-server" $envFile.SERVER_NAME | quote }}
+  SERVER_VERSION: {{ default "1.0.0" $envFile.SERVER_VERSION | quote }}
+  LOG_FILE_PATH: {{ default "./logs/" $envFile.LOG_FILE_PATH | quote }}
+  SHUTDOWN_TIMEOUT: {{ default "5s" $envFile.SHUTDOWN_TIMEOUT | quote }}

@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mcp-server.fullname" . }}
+  labels:
+    app: {{ include "mcp-server.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "mcp-server.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "mcp-server.name" . }}
+    spec:
+      containers:
+        - name: mcp-server
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "mcp-server.fullname" . }}-config
+          volumeMounts:
+            - name: logs
+              mountPath: /app/logs
+
+        - name: log-watcher
+          image: "{{ .Values.sidecar.image }}"
+          command:
+            - sh
+            - -c
+            - |
+              touch /app/logs/requests.log
+              echo "Starting log watcher..."
+              tail -F /app/logs/*.log
+          volumeMounts:
+            - name: logs
+              mountPath: /app/logs
+
+      volumes:
+        - name: logs
+          emptyDir: {}
