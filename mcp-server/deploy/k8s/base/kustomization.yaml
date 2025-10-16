@@ -1,0 +1,11 @@
+namespace: mcp-server
+
+resources:
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+
+configMapGenerator:
+  - name: mcp-server-config
+    envs:
+      - .env
