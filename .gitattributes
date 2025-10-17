@@ -1,0 +1,2 @@
+*.tpl linguist-language=YAML
+templates/*.yaml linguist-language=YAML
