@@ -19,8 +19,13 @@ var (
 	ErrInvalidPort      = errors.New("invalid port")
 )
 
+type HostConfig struct {
+	NodeName string `env:"NODE_NAME"`
+	NodeIP   string `env:"NODE_IP"`
+}
+
 type Config struct {
-	SrvHost string `env:"HTTP_ADDR_HOST" envDefault:"localhost"`
+	SrvHost string `env:"HTTP_ADDR_HOST" envDefault:"0.0.0.0"`
 	SrvPort int    `env:"HTTP_ADDR_PORT" envDefault:"8000"`
 
 	SrvName    string `env:"SERVER_NAME"`
@@ -29,6 +34,8 @@ type Config struct {
 	LogFilePath string `env:"LOG_FILE_PATH" envDefault:"./logs/"`
 
 	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT" envDefault:"5s"`
+
+	HstConfig *HostConfig
 }
 
 func LoadConfig() (*Config, error) {
@@ -43,6 +50,12 @@ func LoadConfig() (*Config, error) {
 	if err := env.Parse(&conf); err != nil {
 		return nil, err
 	}
+
+	var hostConf HostConfig
+	if err := env.Parse(&hostConf); err != nil {
+		return nil, fmt.Errorf("failed to parse host config: %w", err)
+	}
+	conf.HstConfig = &hostConf
 
 	if err := conf.Validate(); err != nil {
 		return nil, err

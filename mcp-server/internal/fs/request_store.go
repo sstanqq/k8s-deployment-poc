@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,8 +14,10 @@ import (
 const logFileName = "requests.log"
 
 type RequestStore struct {
-	dir string
-	mu  sync.Mutex
+	dir  string
+	mu   sync.Mutex
+	file *os.File
+	buf  *bufio.Writer
 }
 
 type RequestEntry struct {
@@ -26,8 +29,27 @@ type RequestEntry struct {
 	Error     string    `json:"error,omitempty"`
 }
 
-func NewRequestStore(dir string) *RequestStore {
-	return &RequestStore{dir: dir}
+func NewRequestStore(dir string) (*RequestStore, error) {
+	filePath := filepath.Join(dir, logFileName)
+	f, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open log file: %w", err)
+	}
+
+	return &RequestStore{
+		dir:  dir,
+		file: f,
+		buf:  bufio.NewWriter(f),
+	}, nil
+}
+
+func (rs *RequestStore) Close() error {
+	rs.mu.Lock()
+	defer rs.mu.Unlock()
+	if err := rs.buf.Flush(); err != nil {
+		return err
+	}
+	return rs.file.Close()
 }
 
 func (rs *RequestStore) save(entry RequestEntry) error {
@@ -40,25 +62,20 @@ func (rs *RequestStore) save(entry RequestEntry) error {
 		return fmt.Errorf("marshal entry: %w", err)
 	}
 
-	filePath := filepath.Join(rs.dir, logFileName)
-
 	rs.mu.Lock()
 	defer rs.mu.Unlock()
 
-	f, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
-	if err != nil {
-		return fmt.Errorf("failed to open log file: %w", err)
-	}
-	defer f.Close()
-
-	if _, err := f.Write(append(data, '\n')); err != nil {
+	if _, err := rs.buf.Write(append(data, '\n')); err != nil {
 		return fmt.Errorf("failed to write log entry: %w", err)
+	}
+
+	if err := rs.buf.Flush(); err != nil {
+		return fmt.Errorf("failed to flush buffer: %w", err)
 	}
 
 	return nil
 }
 
-// Helpers
 func (rs *RequestStore) SaveResult(toolName, sessionID string, result any) error {
 	return rs.save(RequestEntry{
 		Timestamp: time.Now(),

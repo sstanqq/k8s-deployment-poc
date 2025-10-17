@@ -27,6 +27,15 @@ spec:
           volumeMounts:
             - name: logs
               mountPath: /app/logs
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
 
         - name: log-watcher
           image: busybox

@@ -18,8 +18,12 @@ type Application struct {
 }
 
 func NewApplication(conf *config.Config) (*Application, error) {
-	store := fs.NewRequestStore(conf.LogFilePath)
-	h := host.SystemHost{}
+	store, err := fs.NewRequestStore(conf.LogFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request store: %w", err)
+	}
+
+	h := host.NewSystemHost(conf.HstConfig.NodeName, conf.HstConfig.NodeIP)
 
 	srv := mcpserver.NewServer(&mcpserver.ServerOpts{
 		Addr:    fmt.Sprintf("%s:%d", conf.SrvHost, conf.SrvPort),
@@ -41,5 +45,13 @@ func (a *Application) Run(ctx context.Context) error {
 }
 
 func (a *Application) Stop(ctx context.Context) error {
-	return a.srv.Stop(ctx)
+	if err := a.srv.Stop(ctx); err != nil {
+		return err
+	}
+
+	if err := a.store.Close(); err != nil {
+		return err
+	}
+
+	return nil
 }

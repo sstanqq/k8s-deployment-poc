@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os/signal"
 	"syscall"
@@ -33,7 +34,11 @@ func main() {
 	defer cancel()
 
 	if err := app.Stop(shutdownCtx); err != nil {
-		log.Fatalf("application failed while stopped: %v", err)
+		if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+			log.Printf("application shutdown forced due to context: %v", err)
+		} else {
+			log.Fatalf("application failed while stopped: %v", err)
+		}
 	}
 
 	log.Printf("application finished gracefully")

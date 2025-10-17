@@ -23,6 +23,15 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "mcp-server.fullname" . }}-config
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
           volumeMounts:
             - name: logs
               mountPath: /app/logs

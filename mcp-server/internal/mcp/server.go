@@ -63,5 +63,17 @@ func (s *Server) Run(ctx context.Context) error {
 }
 
 func (s *Server) Stop(ctx context.Context) error {
-	return s.srv.Shutdown(ctx)
+	done := make(chan error, 1)
+
+	go func() {
+		done <- s.srv.Shutdown(ctx)
+	}()
+
+	select {
+	case <-ctx.Done():
+		_ = s.srv.Close()
+		return ctx.Err()
+	case err := <-done:
+		return err
+	}
 }
